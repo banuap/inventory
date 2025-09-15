@@ -1,10 +1,12 @@
 """
 Inventory Sensor Management System
-A simple Flask-based API for managing sensor inventory
+A Flask-based API and web frontend for managing sensor inventory
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 
@@ -13,10 +15,51 @@ app = Flask(__name__)
 # Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory_sensors.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
 
+# Initialize extensions
 db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
 
 # Database Models
+
+class User(UserMixin, db.Model):
+    """User model for authentication and access control"""
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='technician')  # admin, manager, technician, analyst
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def has_access_to_sensor(self, sensor):
+        """Check if user has access to a specific sensor based on their role"""
+        if self.role == 'admin':
+            return True
+        elif self.role == 'manager':
+            return True  # Managers can see all sensors
+        elif self.role == 'technician':
+            # Technicians can only see Active and Maintenance sensors
+            return sensor.status in ['Active', 'Maintenance']
+        elif self.role == 'analyst':
+            # Analysts can see all sensors but might have different UI
+            return True
+        return False
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 class Sensor(db.Model):
     """Sensor model for inventory management"""
     id = db.Column(db.Integer, primary_key=True)
@@ -88,11 +131,120 @@ class StatusHistory(db.Model):
             'changed_by': self.changed_by
         }
 
-# API Routes
+# Web Routes (Frontend)
 
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
-    """Welcome endpoint with API information"""
+    """Welcome page with login prompt or redirect to dashboard"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """User login page"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        
+        if not username or not password:
+            flash('Please enter both username and password.', 'error')
+        else:
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password) and user.is_active:
+                login_user(user)
+                next_page = request.args.get('next')
+                flash(f'Welcome back, {user.username}!', 'success')
+                return redirect(next_page) if next_page else redirect(url_for('dashboard'))
+            else:
+                flash('Invalid username or password.', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    """User logout"""
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Main dashboard showing sensor inventory based on user role"""
+    # Get sensors based on user access rights
+    all_sensors = Sensor.query.all()
+    accessible_sensors = [sensor for sensor in all_sensors if current_user.has_access_to_sensor(sensor)]
+    
+    # Get filter parameters
+    status_filter = request.args.get('status')
+    type_filter = request.args.get('type')
+    location_filter = request.args.get('location')
+    
+    # Apply filters if provided
+    filtered_sensors = accessible_sensors
+    if status_filter:
+        filtered_sensors = [s for s in filtered_sensors if s.status == status_filter]
+    if type_filter:
+        filtered_sensors = [s for s in filtered_sensors if s.sensor_type == type_filter]
+    if location_filter:
+        filtered_sensors = [s for s in filtered_sensors if location_filter.lower() in s.location.lower()]
+    
+    # Get unique values for filter dropdowns
+    sensor_types = list(set(s.sensor_type for s in accessible_sensors))
+    locations = list(set(s.location for s in accessible_sensors))
+    statuses = list(set(s.status for s in accessible_sensors))
+    
+    # Statistics for dashboard
+    stats = {
+        'total': len(accessible_sensors),
+        'active': len([s for s in accessible_sensors if s.status == 'Active']),
+        'maintenance': len([s for s in accessible_sensors if s.status == 'Maintenance']),
+        'inactive': len([s for s in accessible_sensors if s.status == 'Inactive']),
+        'retired': len([s for s in accessible_sensors if s.status == 'Retired'])
+    }
+    
+    return render_template('dashboard.html', 
+                         sensors=filtered_sensors,
+                         stats=stats,
+                         sensor_types=sorted(sensor_types),
+                         locations=sorted(locations),
+                         statuses=sorted(statuses),
+                         current_filters={
+                             'status': status_filter,
+                             'type': type_filter,
+                             'location': location_filter
+                         })
+
+@app.route('/sensor/<int:sensor_id>')
+@login_required
+def sensor_detail(sensor_id):
+    """View detailed information about a specific sensor"""
+    sensor = Sensor.query.get_or_404(sensor_id)
+    
+    # Check if user has access to this sensor
+    if not current_user.has_access_to_sensor(sensor):
+        flash('You do not have access to view this sensor.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Get sensor history
+    location_history = LocationHistory.query.filter_by(sensor_id=sensor_id).order_by(LocationHistory.changed_at.desc()).limit(10).all()
+    status_history = StatusHistory.query.filter_by(sensor_id=sensor_id).order_by(StatusHistory.changed_at.desc()).limit(10).all()
+    
+    return render_template('sensor_detail.html', 
+                         sensor=sensor,
+                         location_history=location_history,
+                         status_history=status_history)
+
+# API Routes (keep existing functionality)
+
+@app.route('/api')
+def api_index():
+    """API information endpoint"""
     return jsonify({
         'message': 'Inventory Sensor Management API',
         'version': '1.0',
@@ -306,7 +458,31 @@ def bad_request(error):
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
+def create_default_users():
+    """Create default users for testing"""
+    if not User.query.first():
+        # Create admin user
+        admin = User(username='admin', email='admin@example.com', role='admin')
+        admin.set_password('admin123')
+        
+        # Create manager user
+        manager = User(username='manager', email='manager@example.com', role='manager')
+        manager.set_password('manager123')
+        
+        # Create technician user
+        technician = User(username='technician', email='tech@example.com', role='technician')
+        technician.set_password('tech123')
+        
+        # Create analyst user
+        analyst = User(username='analyst', email='analyst@example.com', role='analyst')
+        analyst.set_password('analyst123')
+        
+        db.session.add_all([admin, manager, technician, analyst])
+        db.session.commit()
+        print("Default users created successfully!")
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        create_default_users()
     app.run(debug=True, host='0.0.0.0', port=5000)

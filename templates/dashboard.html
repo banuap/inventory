@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+            <h2><i class="fas fa-tachometer-alt text-primary"></i> Dashboard</h2>
+            <div class="text-muted">
+                Welcome, {{ current_user.username }} 
+                <span class="badge bg-{{ 'danger' if current_user.role == 'admin' else 'primary' }}">
+                    {{ current_user.role.title() }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.total }}</h4>
+                        <p class="mb-0">Total Sensors</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-microchip fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.active }}</h4>
+                        <p class="mb-0">Active</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.maintenance }}</h4>
+                        <p class="mb-0">Maintenance</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tools fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.inactive + stats.retired }}</h4>
+                        <p class="mb-0">Inactive/Retired</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-pause-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-filter"></i> Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">All Statuses</option>
+                            {% for status in statuses %}
+                                <option value="{{ status }}" {{ 'selected' if current_filters.status == status }}>
+                                    {{ status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Type</label>
+                        <select name="type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for type in sensor_types %}
+                                <option value="{{ type }}" {{ 'selected' if current_filters.type == type }}>
+                                    {{ type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Location</label>
+                        <select name="location" class="form-select">
+                            <option value="">All Locations</option>
+                            {% for location in locations %}
+                                <option value="{{ location }}" {{ 'selected' if current_filters.location == location }}>
+                                    {{ location }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sensors List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list"></i> Sensors ({{ sensors|length }})</h5>
+                {% if current_user.role in ['admin', 'manager'] %}
+                <small class="text-muted">Role: {{ current_user.role.title() }} - Full Access</small>
+                {% elif current_user.role == 'technician' %}
+                <small class="text-muted">Role: Technician - Active & Maintenance Only</small>
+                {% else %}
+                <small class="text-muted">Role: {{ current_user.role.title() }}</small>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if sensors %}
+                <div class="row">
+                    {% for sensor in sensors %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card sensor-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title mb-0">{{ sensor.inventory_id }}</h6>
+                                    <span class="badge status-badge
+                                        {% if sensor.status == 'Active' %}bg-success
+                                        {% elif sensor.status == 'Maintenance' %}bg-warning
+                                        {% elif sensor.status == 'Inactive' %}bg-secondary
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ sensor.status }}
+                                    </span>
+                                </div>
+                                <p class="card-text">
+                                    <strong>{{ sensor.model }}</strong><br>
+                                    <small class="text-muted">{{ sensor.manufacturer }}</small><br>
+                                    <small><i class="fas fa-tag"></i> {{ sensor.sensor_type }}</small><br>
+                                    <small><i class="fas fa-map-marker-alt"></i> {{ sensor.location }}</small>
+                                </p>
+                                <a href="{{ url_for('sensor_detail', sensor_id=sensor.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No sensors found</h5>
+                    <p class="text-muted">Try adjusting your filters or check back later.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
