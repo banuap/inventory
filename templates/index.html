@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Inventory Management System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <div class="py-5">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-microchip text-primary"></i>
+                <br>Inventory Management System
+            </h1>
+            <p class="lead mb-4">
+                Comprehensive sensor inventory management with location tracking, 
+                status monitoring, and historical data management.
+            </p>
+            
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                            <h5>Search & Filter</h5>
+                            <p class="text-muted">Advanced search and filtering capabilities for quick sensor location</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-map-marker-alt fa-3x text-success mb-3"></i>
+                            <h5>Location Tracking</h5>
+                            <p class="text-muted">Track sensor locations with complete history and change logs</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                            <h5>Statistics</h5>
+                            <p class="text-muted">Real-time statistics and reporting for better decision making</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-5">
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

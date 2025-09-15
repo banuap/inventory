@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sensor.inventory_id }} - Sensor Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 mt-3">
+            <h2><i class="fas fa-microchip text-primary"></i> Sensor Details</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sensor Information -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ sensor.inventory_id }}</h5>
+                <span class="badge 
+                    {% if sensor.status == 'Active' %}bg-success
+                    {% elif sensor.status == 'Maintenance' %}bg-warning
+                    {% elif sensor.status == 'Inactive' %}bg-secondary
+                    {% else %}bg-danger{% endif %}">
+                    {{ sensor.status }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Basic Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Model:</strong></td>
+                                <td>{{ sensor.model }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Serial Number:</strong></td>
+                                <td>{{ sensor.serial_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Manufacturer:</strong></td>
+                                <td>{{ sensor.manufacturer }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Type:</strong></td>
+                                <td>{{ sensor.sensor_type }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Current Status</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td><i class="fas fa-map-marker-alt text-danger"></i> {{ sensor.location }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>{{ sensor.status }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created:</strong></td>
+                                <td>{{ sensor.created_at.strftime('%Y-%m-%d %H:%M') if sensor.created_at }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Updated:</strong></td>
+                                <td>{{ sensor.updated_at.strftime('%Y-%m-%d %H:%M') if sensor.updated_at }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-tools"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                {% if current_user.role in ['admin', 'manager'] %}
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" disabled>
+                        <i class="fas fa-edit"></i> Edit Details
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" disabled>
+                        <i class="fas fa-map-marker-alt"></i> Update Location
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" disabled>
+                        <i class="fas fa-cog"></i> Change Status
+                    </button>
+                </div>
+                <small class="text-muted mt-2">
+                    <i class="fas fa-info-circle"></i> Editing features coming soon
+                </small>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Limited access as {{ current_user.role }}. Contact admin for sensor modifications.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Section -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-history"></i> Location History</h6>
+            </div>
+            <div class="card-body">
+                {% if location_history %}
+                <div class="timeline">
+                    {% for record in location_history %}
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ record.new_location }}</strong>
+                                    {% if record.previous_location %}
+                                    <br><small class="text-muted">From: {{ record.previous_location }}</small>
+                                    {% endif %}
+                                    {% if record.changed_by %}
+                                    <br><small class="text-info">By: {{ record.changed_by }}</small>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {{ record.changed_at.strftime('%m/%d %H:%M') if record.changed_at }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No location history available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-history"></i> Status History</h6>
+            </div>
+            <div class="card-body">
+                {% if status_history %}
+                <div class="timeline">
+                    {% for record in status_history %}
+                    <div class="card mb-2">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge 
+                                        {% if record.new_status == 'Active' %}bg-success
+                                        {% elif record.new_status == 'Maintenance' %}bg-warning
+                                        {% elif record.new_status == 'Inactive' %}bg-secondary
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ record.new_status }}
+                                    </span>
+                                    {% if record.previous_status %}
+                                    <small class="text-muted">from {{ record.previous_status }}</small>
+                                    {% endif %}
+                                    {% if record.reason %}
+                                    <br><small class="text-muted">{{ record.reason }}</small>
+                                    {% endif %}
+                                    {% if record.changed_by %}
+                                    <br><small class="text-info">By: {{ record.changed_by }}</small>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    {{ record.changed_at.strftime('%m/%d %H:%M') if record.changed_at }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No status history available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

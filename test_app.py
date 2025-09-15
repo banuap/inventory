@@ -30,8 +30,8 @@ def sample_sensor_data():
     }
 
 def test_index_endpoint(client):
-    """Test the index endpoint returns API information"""
-    response = client.get('/')
+    """Test the API index endpoint returns API information"""
+    response = client.get('/api')
     assert response.status_code == 200
     data = json.loads(response.data)
     assert 'message' in data
