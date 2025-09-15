@@ -60,3 +60,10 @@ htmlcov/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# COBOL specific
+cobol/bin/
+cobol/data/*.dat
+cobol/data/*.log
+*.lst
+*.exe
