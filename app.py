@@ -10,6 +10,15 @@ import os
 
 app = Flask(__name__)
 
+# Import COBOL SOAP integration
+try:
+    from cobol_soap_integration import cobol_soap_bp
+    app.register_blueprint(cobol_soap_bp)
+    COBOL_SOAP_ENABLED = True
+except ImportError as e:
+    print(f"COBOL SOAP integration not available: {e}")
+    COBOL_SOAP_ENABLED = False
+
 # Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory_sensors.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -291,6 +300,47 @@ def get_sensor_stats():
         },
         'by_type': dict(type_counts),
         'by_manufacturer': dict(manufacturer_counts)
+    })
+
+@app.route('/api/services', methods=['GET'])
+def get_services():
+    """Get information about available services"""
+    services = {
+        'sensor_management': {
+            'description': 'REST API for sensor inventory management',
+            'endpoints': [
+                'GET /api/sensors - List all sensors',
+                'POST /api/sensors - Create a new sensor', 
+                'GET /api/sensors/{id} - Get sensor details',
+                'PUT /api/sensors/{id} - Update sensor',
+                'DELETE /api/sensors/{id} - Delete sensor',
+                'GET /api/sensors/search - Search sensors',
+                'GET /api/sensors/stats - Get statistics'
+            ]
+        }
+    }
+    
+    if COBOL_SOAP_ENABLED:
+        services['account_management'] = {
+            'description': 'COBOL SOAP API for broker dealer account management',
+            'endpoints': [
+                'POST /soap/accounts - SOAP operations for account management',
+                'GET /soap/wsdl - Get WSDL definition',
+                'GET /soap/test - Test SOAP API functionality'
+            ],
+            'operations': [
+                'CREATE_ACCOUNT - Create new broker account',
+                'GET_ACCOUNT - Retrieve account details',
+                'UPDATE_ACCOUNT - Update account information',
+                'DELETE_ACCOUNT - Delete account',
+                'LIST_ACCOUNTS - List all accounts',
+                'GET_BALANCE - Get account balance'
+            ]
+        }
+    
+    return jsonify({
+        'services': services,
+        'cobol_soap_enabled': COBOL_SOAP_ENABLED
     })
 
 # Error handlers
