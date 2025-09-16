@@ -23,7 +23,7 @@ A Spring Boot microservice for customer account opening with support for differe
 
 ### Account Opening Service
 - **Account Management**: Create, read, update, and delete customer accounts
-- **Account Types**: Support for SAVINGS, CHECKING, BUSINESS, and INVESTMENT accounts
+- **Account Types**: Support for SAVINGS, CHECKING, BUSINESS, INVESTMENT, and CRYPTO accounts
 - **Validation**: Input validation for all required fields and email format
 - **Unique Email**: Ensures no duplicate accounts with the same email address
 - **REST API**: Complete RESTful API for integration

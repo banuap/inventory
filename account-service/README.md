@@ -5,7 +5,7 @@ A Spring Boot microservice for account opening functionality, providing REST API
 ## Features
 
 - **Account Management**: Create, read, update, and delete customer accounts
-- **Account Types**: Support for SAVINGS, CHECKING, BUSINESS, and INVESTMENT accounts
+- **Account Types**: Support for SAVINGS, CHECKING, BUSINESS, INVESTMENT, and CRYPTO accounts
 - **Validation**: Input validation for all required fields and email format
 - **Unique Email**: Ensures no duplicate accounts with the same email address
 - **REST API**: Complete RESTful API for integration
@@ -77,7 +77,7 @@ The service will start on `http://localhost:8080`
 - `name` - Customer name (required)
 - `address` - Customer address (required)
 - `email` - Customer email (required, unique, validated format)
-- `accountType` - Type of account (required: SAVINGS, CHECKING, BUSINESS, INVESTMENT)
+- `accountType` - Type of account (required: SAVINGS, CHECKING, BUSINESS, INVESTMENT, CRYPTO)
 - `createdAt` - Creation timestamp
 - `updatedAt` - Last update timestamp
 
@@ -86,6 +86,7 @@ The service will start on `http://localhost:8080`
 - **CHECKING**: Personal checking account
 - **BUSINESS**: Business account
 - **INVESTMENT**: Investment account
+- **CRYPTO**: Cryptocurrency account
 
 ## API Usage Examples
 
@@ -148,7 +149,7 @@ curl -X DELETE http://localhost:8080/api/accounts/1
 - **Name**: Required, cannot be blank
 - **Address**: Required, cannot be blank, max 500 characters
 - **Email**: Required, must be valid email format, must be unique
-- **Account Type**: Required, must be one of: SAVINGS, CHECKING, BUSINESS, INVESTMENT
+- **Account Type**: Required, must be one of: SAVINGS, CHECKING, BUSINESS, INVESTMENT, CRYPTO
 
 ## Error Handling
 
