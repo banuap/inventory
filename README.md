@@ -1,9 +1,18 @@
-# Inventory Sensor Management System
+# Inventory Management System
 
-A comprehensive Flask-based API system for managing sensor inventory with location tracking, status monitoring, and historical data management.
+A comprehensive system for managing inventory and customer accounts with multiple microservices.
+
+## Services
+
+### 1. Sensor Management (Flask/Python)
+A Flask-based API system for managing sensor inventory with location tracking, status monitoring, and historical data management.
+
+### 2. Account Opening Service (Spring Boot/Java)
+A Spring Boot microservice for customer account opening with support for different account types.
 
 ## Features
 
+### Sensor Management Service
 - **Sensor CRUD Operations**: Create, read, update, and delete sensors
 - **Location Tracking**: Track sensor locations with complete history
 - **Status Management**: Monitor sensor status (Active, Inactive, Maintenance, Retired) with change history
@@ -12,15 +21,25 @@ A comprehensive Flask-based API system for managing sensor inventory with locati
 - **REST API**: Complete RESTful API for integration
 - **Command Line Interface**: Easy-to-use CLI for system interaction
 
+### Account Opening Service
+- **Account Management**: Create, read, update, and delete customer accounts
+- **Account Types**: Support for SAVINGS, CHECKING, BUSINESS, INVESTMENT, and CRYPTO accounts
+- **Validation**: Input validation for all required fields and email format
+- **Unique Email**: Ensures no duplicate accounts with the same email address
+- **REST API**: Complete RESTful API for integration
+- **JPA/Hibernate**: Database operations with Spring Data JPA
+
 ## Quick Start
 
-### 1. Install Dependencies
+### Sensor Management Service (Flask/Python)
+
+#### 1. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Start the Server
+#### 2. Start the Sensor Management Server
 
 ```bash
 python app.py
@@ -28,13 +47,13 @@ python app.py
 
 The server will start on `http://localhost:5000`
 
-### 3. Populate with Sample Data
+#### 3. Populate with Sample Data
 
 ```bash
 python demo.py
 ```
 
-### 4. Use the CLI Tool
+#### 4. Use the CLI Tool
 
 ```bash
 # List all sensors
@@ -59,9 +78,57 @@ python cli.py update 1 --location "New Location"
 python cli.py update 1 --status "Maintenance" --reason "Scheduled maintenance"
 ```
 
+### Account Opening Service (Spring Boot/Java)
+
+#### Prerequisites
+- Java 17 or higher
+- Maven 3.6 or higher
+
+#### 1. Navigate to Account Service
+
+```bash
+cd account-service
+```
+
+#### 2. Build and Test
+
+```bash
+mvn clean test
+```
+
+#### 3. Start the Account Service
+
+```bash
+mvn spring-boot:run
+```
+
+The service will start on `http://localhost:8080`
+
+#### 4. Test the Account API
+
+```bash
+# Get service info
+curl http://localhost:8080/api/accounts/info
+
+# Create an account
+curl -X POST http://localhost:8080/api/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "address": "123 Main St, City, State",
+    "email": "john@example.com",
+    "accountType": "SAVINGS"
+  }'
+
+# Get all accounts
+curl http://localhost:8080/api/accounts
+```
+
 ## API Endpoints
 
-### Core Sensor Operations
+### Sensor Management API (Flask - Port 5000)
+
+#### Core Sensor Operations
 
 - `GET /api/sensors` - List all sensors (with optional filtering)
 - `POST /api/sensors` - Create a new sensor
@@ -69,15 +136,32 @@ python cli.py update 1 --status "Maintenance" --reason "Scheduled maintenance"
 - `PUT /api/sensors/{id}` - Update sensor
 - `DELETE /api/sensors/{id}` - Delete sensor
 
-### Search and Statistics
+#### Search and Statistics
 
 - `GET /api/sensors/search?q={query}` - Search sensors
 - `GET /api/sensors/stats` - Get system statistics
 
-### History Tracking
+#### History Tracking
 
 - `GET /api/sensors/{id}/location-history` - Get location history
 - `GET /api/sensors/{id}/status-history` - Get status history
+
+### Account Opening API (Spring Boot - Port 8080)
+
+#### Account Operations
+
+- `GET /api/accounts/info` - Get service information
+- `GET /api/accounts` - Get all accounts
+- `POST /api/accounts` - Create a new account
+- `GET /api/accounts/{id}` - Get account by ID
+- `PUT /api/accounts/{id}` - Update account
+- `DELETE /api/accounts/{id}` - Delete account
+
+#### Search and Filter
+
+- `GET /api/accounts/email/{email}` - Get account by email
+- `GET /api/accounts/type/{accountType}` - Get accounts by type
+- `GET /api/accounts/search?name={name}` - Search accounts by name
 
 ### Filtering Parameters
 
@@ -188,13 +272,30 @@ The system is built with:
 
 ```
 inventory/
-├── app.py              # Main Flask application
-├── cli.py              # Command line interface
-├── demo.py             # Demo script with sample data
-├── test_app.py         # Test suite
-├── requirements.txt    # Python dependencies
-├── Readme.md           # This file
-└── user-stories-sensor-management.md  # User stories and requirements
+├── app.py                  # Main Flask application (Sensor Management)
+├── cli.py                  # Command line interface for sensors
+├── demo.py                 # Demo script with sample sensor data
+├── test_app.py             # Test suite for sensor management
+├── requirements.txt        # Python dependencies
+├── user-stories-sensor-management.md  # User stories and requirements
+├── account-service/        # Spring Boot Account Opening Microservice
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/inventory/accountservice/
+│   │   │   │   ├── AccountServiceApplication.java
+│   │   │   │   ├── controller/AccountController.java
+│   │   │   │   ├── service/AccountService.java
+│   │   │   │   ├── repository/AccountRepository.java
+│   │   │   │   ├── entity/Account.java
+│   │   │   │   ├── entity/AccountType.java
+│   │   │   │   └── dto/AccountDto.java
+│   │   │   └── resources/
+│   │   │       └── application.properties
+│   │   └── test/
+│   │       └── java/com/inventory/accountservice/
+│   ├── pom.xml             # Maven configuration
+│   └── README.md           # Account service documentation
+└── README.md               # This file
 ```
 
 ## Future Enhancements
