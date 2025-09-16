@@ -52,6 +52,20 @@ htmlcov/
 # Logs
 *.log
 
+# Java/Maven
+account-service/target/
+account-service/.mvn/
+account-service/mvnw
+account-service/mvnw.cmd
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+
 # OS
 .DS_Store
 .DS_Store?
