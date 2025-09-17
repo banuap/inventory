@@ -66,4 +66,4 @@ DealerService/bin/
 DealerService/obj/
 DealerService/.vs/
 DealerService/*.user
-DealerService/dealers.db
+DealerService/dealers.dbDealerService/dealers.db*
