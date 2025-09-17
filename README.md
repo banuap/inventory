@@ -1,9 +1,18 @@
-# Inventory Sensor Management System
+# Inventory Management System
 
-A comprehensive Flask-based API system for managing sensor inventory with location tracking, status monitoring, and historical data management.
+A comprehensive microservices-based API system for managing inventory with sensor tracking and dealer management capabilities.
+
+## Services
+
+### 1. Sensor Management Service (Python/Flask)
+A Flask-based API system for managing sensor inventory with location tracking, status monitoring, and historical data management.
+
+### 2. Dealer Management Service (C#/ASP.NET Core)
+A C# ASP.NET Core Web API microservice for managing dealer information including account numbers and addresses.
 
 ## Features
 
+### Sensor Service Features
 - **Sensor CRUD Operations**: Create, read, update, and delete sensors
 - **Location Tracking**: Track sensor locations with complete history
 - **Status Management**: Monitor sensor status (Active, Inactive, Maintenance, Retired) with change history
@@ -12,21 +21,42 @@ A comprehensive Flask-based API system for managing sensor inventory with locati
 - **REST API**: Complete RESTful API for integration
 - **Command Line Interface**: Easy-to-use CLI for system interaction
 
+### Dealer Service Features
+- **Dealer CRUD Operations**: Create, read, update, and delete dealers
+- **Account Number Validation**: Ensures unique dealer account numbers
+- **Search Functionality**: Search dealers by account number or address
+- **REST API**: Complete RESTful API with proper HTTP status codes
+- **Data Validation**: Comprehensive input validation and error handling
+
 ## Quick Start
 
-### 1. Install Dependencies
+### Sensor Service (Python)
+
+#### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Start the Server
+#### 2. Start the Server
 
 ```bash
 python app.py
 ```
 
 The server will start on `http://localhost:5000`
+
+### Dealer Service (C#)
+
+#### 1. Build and Run
+
+```bash
+cd DealerService
+dotnet build
+dotnet run
+```
+
+The service will start on `http://localhost:5143`
 
 ### 3. Populate with Sample Data
 
@@ -86,9 +116,25 @@ python cli.py update 1 --status "Maintenance" --reason "Scheduled maintenance"
 - `manufacturer` - Filter by manufacturer
 - `location` - Filter by location
 
+## Dealer Service API Endpoints
+
+### Core Dealer Operations
+
+- `GET /api/dealers` - List all dealers
+- `POST /api/dealers` - Create a new dealer
+- `GET /api/dealers/{id}` - Get dealer by ID
+- `PUT /api/dealers/{id}` - Update dealer
+- `DELETE /api/dealers/{id}` - Delete dealer
+
+### Search
+
+- `GET /api/dealers/search?q={query}` - Search dealers by account number or address
+
 ## API Usage Examples
 
-### Create a Sensor
+### Sensor Service Examples
+
+#### Create a Sensor
 
 ```bash
 curl -X POST http://localhost:5000/api/sensors \
@@ -104,25 +150,50 @@ curl -X POST http://localhost:5000/api/sensors \
   }'
 ```
 
-### Get All Sensors
+#### Get All Sensors
 
 ```bash
 curl http://localhost:5000/api/sensors
 ```
 
-### Search Sensors
+#### Search Sensors
 
 ```bash
 curl "http://localhost:5000/api/sensors/search?q=temperature"
 ```
 
-### Filter by Status
+#### Filter by Status
 
 ```bash
 curl "http://localhost:5000/api/sensors?status=Active"
 ```
 
-### Update Sensor Location
+### Dealer Service Examples
+
+#### Create a Dealer
+
+```bash
+curl -X POST http://localhost:5143/api/dealers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "accountNumber": "ACC-001",
+    "address": "123 Main Street, Anytown, ST 12345"
+  }'
+```
+
+#### Get All Dealers
+
+```bash
+curl http://localhost:5143/api/dealers
+```
+
+#### Search Dealers
+
+```bash
+curl "http://localhost:5143/api/dealers/search?q=Main"
+```
+
+#### Update Sensor Location
 
 ```bash
 curl -X PUT http://localhost:5000/api/sensors/1 \
@@ -133,7 +204,7 @@ curl -X PUT http://localhost:5000/api/sensors/1 \
   }'
 ```
 
-### Update Sensor Status
+#### Update Sensor Status
 
 ```bash
 curl -X PUT http://localhost:5000/api/sensors/1 \
@@ -145,9 +216,11 @@ curl -X PUT http://localhost:5000/api/sensors/1 \
   }'
 ```
 
-## Data Model
+## Data Models
 
-### Sensor Fields
+### Sensor Model
+
+#### Sensor Fields
 
 - `id` - Auto-generated primary key
 - `inventory_id` - Unique inventory identifier
@@ -160,42 +233,87 @@ curl -X PUT http://localhost:5000/api/sensors/1 \
 - `created_at` - Creation timestamp
 - `updated_at` - Last update timestamp
 
-### Status Values
+#### Status Values
 
 - **Active** - Sensor is operational and in use
 - **Inactive** - Sensor is not currently in use but operational
 - **Maintenance** - Sensor is undergoing maintenance or calibration
 - **Retired** - Sensor has been permanently removed from service
 
+### Dealer Model
+
+#### Dealer Fields
+
+- `id` - Auto-generated primary key (integer)
+- `accountNumber` - Unique dealer account number (string, required, max 50 chars)
+- `address` - Dealer address (string, required, max 500 chars)
+- `createdAt` - Creation timestamp (DateTime, UTC)
+- `updatedAt` - Last update timestamp (DateTime, UTC)
+
 ## Testing
 
-Run the test suite:
+### Sensor Service Tests
+
+Run the Python test suite:
 
 ```bash
 pytest test_app.py -v
 ```
 
+### Dealer Service Tests
+
+Run the C# test suite:
+
+```bash
+cd DealerService
+dotnet test
+```
+
 ## Architecture
 
-The system is built with:
+The system is built with a microservices architecture:
 
+### Sensor Service (Python)
 - **Flask** - Web framework
 - **SQLAlchemy** - Database ORM
 - **SQLite** - Database (easily replaceable with PostgreSQL, MySQL, etc.)
 - **Marshmallow** - Data serialization (for future enhancements)
 
+### Dealer Service (C#)
+- **ASP.NET Core 8.0** - Web framework
+- **Entity Framework Core** - Database ORM
+- **SQLite** - Database
+- **Swagger/OpenAPI** - API documentation
+- **xUnit** - Testing framework
+
 ## File Structure
 
 ```
 inventory/
-├── app.py              # Main Flask application
+├── app.py              # Main Flask application (Sensor Service)
 ├── cli.py              # Command line interface
 ├── demo.py             # Demo script with sample data
-├── test_app.py         # Test suite
+├── test_app.py         # Test suite for Sensor Service
 ├── requirements.txt    # Python dependencies
-├── Readme.md           # This file
-└── user-stories-sensor-management.md  # User stories and requirements
+├── README.md           # This file
+├── user-stories-sensor-management.md  # User stories and requirements
+└── DealerService/      # C# Dealer Management Microservice
+    ├── Controllers/    # API Controllers
+    ├── Data/          # Database context
+    ├── Models/        # Data models
+    ├── Tests/         # Unit tests
+    ├── Program.cs     # Application entry point
+    ├── DealerService.csproj  # Project file
+    ├── appsettings.json      # Configuration
+    └── README.md      # Dealer service documentation
 ```
+
+## Service URLs
+
+When running both services:
+
+- **Sensor Service**: `http://localhost:5000`
+- **Dealer Service**: `http://localhost:5143`
 
 ## Future Enhancements
 
