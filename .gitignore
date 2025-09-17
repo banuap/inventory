@@ -60,3 +60,10 @@ htmlcov/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# .NET
+DealerService/bin/
+DealerService/obj/
+DealerService/.vs/
+DealerService/*.user
+DealerService/dealers.db*
